@@ -1,3 +1,13 @@
+import streamlit as st
+import base64
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.fernet import Fernet
+
+# 1. This MUST be the first Streamlit command
+st.set_page_config(page_title="Cyber Lab Encryptor", page_icon="🔐")
+
+# 2. Now add the professional header
 st.markdown("""
 # 🛡️ Cybersecurity Research Tool
 ### Penetration Testing & Ethical Hacking Framework
@@ -18,15 +28,10 @@ secure data handling and cryptographic principles.
 
 ---
 """)
-import streamlit as st
-import base64
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.fernet import Fernet
 
-# This function turns your password into a secure key
+# 3. Encryption logic
 def generate_key(password: str):
-    salt = b'\x00' * 16 
+    salt = b'\x00' * 16  # In a production app, you'd use a unique salt
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -36,8 +41,6 @@ def generate_key(password: str):
     key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
     return key
 
-# --- Streamlit UI Setup ---
-st.set_page_config(page_title="Cyber Lab Encryptor", page_icon="🔐")
 st.title("🔐 Professional AES Encryptor")
 st.write("Enter a password and a message to securely encrypt or decrypt data.")
 
@@ -46,7 +49,6 @@ pass_input = st.text_input("Enter Master Password:", type="password")
 message = st.text_area("Message to process (Text or Encrypted Token):")
 
 if pass_input and message:
-    # Setup the encryption engine
     key = generate_key(pass_input)
     f = Fernet(key)
 
@@ -54,14 +56,12 @@ if pass_input and message:
 
     with col1:
         if st.button("Encrypt"):
-            # Logic for Encrypting
             token = f.encrypt(message.encode())
             encrypted_text = token.decode()
             
             st.success("Message Encrypted!")
             st.code(encrypted_text, language="text")
             
-            # --- THE DOWNLOAD BUTTON SPLICE ---
             st.download_button(
                 label="📥 Download Encrypted File",
                 data=encrypted_text,
@@ -71,7 +71,6 @@ if pass_input and message:
 
     with col2:
         if st.button("Decrypt"):
-            # Logic for Decrypting
             try:
                 decoded = f.decrypt(message.encode())
                 st.info("Message Decrypted:")
