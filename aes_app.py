@@ -1,3 +1,23 @@
+st.markdown("""
+# 🛡️ Cybersecurity Research Tool
+### Penetration Testing & Ethical Hacking Framework
+
+This application is a specialized tool designed to demonstrate core security concepts. 
+It is part of a larger project within my **Cybersecurity** curriculum, focusing on 
+secure data handling and cryptographic principles.
+
+---
+
+### 🔍 Project Features:
+* **Secure Encryption:** Implementing robust algorithms to protect data integrity.
+* **Vulnerability Analysis:** Tools designed for educational security assessments.
+* **Technical Documentation:** A practical application of ethical hacking methodologies.
+
+> **Note:** This tool is intended for **authorized educational use only**. Always ensure 
+> you have explicit permission before performing any security testing.
+
+---
+""")
 import streamlit as st
 import base64
 from cryptography.hazmat.primitives import hashes
