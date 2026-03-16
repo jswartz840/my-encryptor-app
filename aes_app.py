@@ -1,3 +1,17 @@
+st.set_page_config(page_title="CyberShield", page_icon="🛡️")
+
+# Custom CSS to force a dark, professional theme
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #0e1117;
+        color: #ffffff;
+    }
+    h1 {
+        color: #ff4b4b !important; /* Professional Red */
+    }
+    </style>
+    """, unsafe_allow_index=True)
 import streamlit as st
 import base64
 from cryptography.hazmat.primitives import hashes
