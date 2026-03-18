@@ -144,4 +144,3 @@ if st.button("Reveal Message"):
 
         st.warning("Please paste a token first.")
 
-```
