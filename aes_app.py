@@ -1,16 +1,12 @@
 import streamlit as st
 
-import os
-
 from cryptography.fernet import Fernet
-
-from cryptography.hazmat.primitives import hashes
-
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 import base64
 
-# --- 1. RED AND BLACK THEME (CUSTOM CSS) ---
+# --- 1. PROFESSIONAL RED & BLACK AESTHETIC ---
+
+st.set_page_config(page_title="AES Security Console", page_icon="🔴")
 
 st.markdown("""
 
@@ -28,6 +24,12 @@ st.markdown("""
 
         color: #FF0000 !important;
 
+        font-family: 'Courier New', Courier, monospace;
+
+        text-transform: uppercase;
+
+        letter-spacing: 2px;
+
     }
 
     .stButton>button {
@@ -36,9 +38,13 @@ st.markdown("""
 
         color: white;
 
-        border-radius: 5px;
+        border-radius: 2px;
 
-        border: none;
+        border: 1px solid #8B0000;
+
+        width: 100%;
+
+        font-weight: bold;
 
     }
 
@@ -46,7 +52,29 @@ st.markdown("""
 
         background-color: #8B0000;
 
-        color: white;
+        border: 1px solid #FF0000;
+
+    }
+
+    .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+
+        background-color: #1A1A1A;
+
+        color: #00FF00;
+
+        border: 1px solid #FF0000;
+
+        font-family: 'Courier New', monospace;
+
+    }
+
+    .stInfo {
+
+        background-color: #1A0000;
+
+        color: #FF0000;
+
+        border: 1px solid #FF0000;
 
     }
 
@@ -54,86 +82,148 @@ st.markdown("""
 
     """, unsafe_allow_html=True)
 
-# --- 2. CORE ENCRYPTION LOGIC (SECURE DERIVATION) ---
+# --- 2. CORE SECURITY LOGIC ---
 
-def derive_key(password: str, salt: bytes):
+def generate_key():
 
-    kdf = PBKDF2HMAC(
+    return Fernet.generate_key()
 
-        algorithm=hashes.SHA256(),
+def encrypt_message(message, key):
 
-        length=32,
+    f = Fernet(key)
 
-        salt=salt,
+    return f.encrypt(message.encode())
 
-        iterations=100000,
+def decrypt_message(encrypted_message, key):
 
-    )
+    f = Fernet(key)
 
-    return base64.urlsafe_b64encode(kdf.derive(password.encode()))
+    return f.decrypt(encrypted_message).decode()
 
-# --- 3. INTERFACE & FEATURES ---
+# --- 3. SIDEBAR: APP CAPABILITIES & BOASTING ---
 
-st.title("🔴 Professional AES Encryptor")
+with st.sidebar:
 
-st.subheader("Cybersecurity Research Tool")
+    st.title("🔴 SYSTEM SPECS")
 
-if 'salt' not in st.session_state:
+    st.markdown("### **Professional Features:**")
 
-    st.session_state.salt = os.urandom(16)
+    st.info("🛡️ **AES-128 Bit Encryption**\nIndustry-standard symmetric-key algorithm.")
 
-pass_input = st.text_input("Enter Master Password", type="password")
+    st.info("🔑 **Dynamic Key Generation**\nUnique cryptographic keys for every session.")
+
+    st.info("☣️ **Zero-Persistence**\nKeys are held in volatile RAM (Session State) only.")
+
+    st.info("🎨 **High-Contrast UI**\nOptimized for low-light security environments.")
+
+    
+
+    st.divider()
+
+    st.markdown("### **Project Scope:**")
+
+    st.write("This application demonstrates competency in Python-based cryptography and secure interface design.")
+
+# --- 4. MAIN INTERFACE ---
+
+st.title("🛡️ SECURE ENVELOPE v3.0")
+
+st.write("Advanced Cryptographic Interface")
+
+if 'key' not in st.session_state:
+
+    st.session_state.key = None
+
+st.divider()
+
+# KEY MANAGEMENT
 
 col1, col2 = st.columns(2)
 
 with col1:
 
-    msg = st.text_area("Message to Encrypt")
+    if st.button("🆕 GENERATE MASTER KEY"):
 
-    if st.button("Encrypt Message"):
+        st.session_state.key = generate_key()
 
-        if pass_input and msg:
-
-            key = derive_key(pass_input, st.session_state.salt)
-
-            f = Fernet(key)
-
-            token = f.encrypt(msg.encode())
-
-            st.code(token.decode(), language="text")
-
-        else:
-
-            st.warning("Password and Message required.")
+        st.success("NEW KEY ACTIVE")
 
 with col2:
 
-    token_in = st.text_area("Token to Decrypt")
+    if st.session_state.key:
 
-    if st.button("Decrypt Message"):
+        st.download_button(
 
-        if pass_input and token_in:
+            label="💾 EXPORT KEY (.txt)",
 
-            try:
+            data=st.session_state.key,
 
-                key = derive_key(pass_input, st.session_state.salt)
+            file_name="master_key.txt",
 
-                f = Fernet(key)
+            mime="text/plain"
 
-                decoded = f.decrypt(token_in.encode()).decode()
+        )
 
-                st.success(f"Decrypted: {decoded}")
+if st.session_state.key:
 
-            except:
+    st.info(f"**ACTIVE SESSION KEY:** `{st.session_state.key.decode()}`")
 
-                st.error("Decryption failed. Check password/token.")
+    
+
+    st.divider()
+
+    
+
+    # ENCRYPT/DECRYPT TOOLS
+
+    tab1, tab2 = st.tabs(["ENCRYPT PAYLOAD", "DECRYPT TOKEN"])
+
+    
+
+    with tab1:
+
+        st.subheader("LOCK DATA")
+
+        msg = st.text_area("Plaintext Input", placeholder="Enter sensitive data...")
+
+        if st.button("EXECUTE ENCRYPTION"):
+
+            if msg:
+
+                token = encrypt_message(msg, st.session_state.key)
+
+                st.code(token.decode(), language="text")
+
+            else:
+
+                st.warning("Input required.")
+
+                
+
+    with tab2:
+
+        st.subheader("UNLOCK DATA")
+
+        token_in = st.text_input("Encrypted Token Input")
+
+        if st.button("EXECUTE DECRYPTION"):
+
+            if token_in:
+
+                try:
+
+                    decoded = decrypt_message(token_in.encode(), st.session_state.key)
+
+                    st.success(f"PAYLOAD RECOVERED: {decoded}")
+
+                except:
+
+                    st.error("DECRYPTION FAILED: Invalid Token or Key")
+
+else:
+
+    st.warning("SYSTEM STANDBY: Please generate a Master Key to initialize.")
 
 st.divider()
 
-# FEATURE: Clear All Button
-
-if st.button("Clear All Data"):
-
-    st.rerun()
-
-st.caption("Developed for Cybersecurity Competency Research")
+st.caption("SECURE ENVELOPE | AES-128 | PYTHON 3.x")
