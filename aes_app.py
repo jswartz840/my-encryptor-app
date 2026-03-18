@@ -1,145 +1,140 @@
+
 import streamlit as st
+
+import os
 
 from cryptography.fernet import Fernet
 
+from cryptography.hazmat.primitives import hashes
+
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 import base64
 
-# --- CORE ENCRYPTION LOGIC ---
+# --- 1. RED AND BLACK THEME (CUSTOM CSS) ---
 
-def generate_key():
+st.markdown("""
 
-    return Fernet.generate_key()
+    <style>
 
-def encrypt_message(message, key):
+    .stApp {
 
-    f = Fernet(key)
+        background-color: #000000;
 
-    return f.encrypt(message.encode()).decode()
+        color: #FFFFFF;
 
-def decrypt_message(encrypted_message, key):
+    }
 
-    f = Fernet(key)
+    h1, h2, h3 {
 
-    return f.decrypt(encrypted_message.encode()).decode()
+        color: #FF0000 !important;
 
-# --- INTERFACE SETUP ---
+    }
 
-st.set_page_config(page_title="Secure Envelope", page_icon="🔐")
+    .stButton>button {
 
-st.title("🔐 Secure Envelope Encryptor")
+        background-color: #FF0000;
 
-# Initialize session state variables
+        color: white;
 
-if 'key' not in st.session_state:
+        border-radius: 5px;
 
-    st.session_state.key = None
+        border: none;
 
-if 'encrypted_token' not in st.session_state:
+    }
 
-    st.session_state.encrypted_token = None
+    .stButton>button:hover {
 
-st.write("Generate a unique master key to lock and unlock private data.")
+        background-color: #8B0000;
 
-# --- KEY MANAGEMENT ---
+        color: white;
+
+    }
+
+    </style>
+
+    """, unsafe_allow_html=True)
+
+# --- 2. CORE ENCRYPTION LOGIC (SECURE DERIVATION) ---
+
+def derive_key(password: str, salt: bytes):
+
+    kdf = PBKDF2HMAC(
+
+        algorithm=hashes.SHA256(),
+
+        length=32,
+
+        salt=salt,
+
+        iterations=100000,
+
+    )
+
+    return base64.urlsafe_b64encode(kdf.derive(password.encode()))
+
+# --- 3. INTERFACE & FEATURES ---
+
+st.title("🔴 Professional AES Encryptor")
+
+st.subheader("Cybersecurity Research Tool")
+
+if 'salt' not in st.session_state:
+
+    st.session_state.salt = os.urandom(16)
+
+pass_input = st.text_input("Enter Master Password", type="password")
 
 col1, col2 = st.columns(2)
 
 with col1:
 
-    if st.button("Generate Master Key", use_container_width=True):
+    msg = st.text_area("Message to Encrypt")
 
-        st.session_state.key = generate_key()
+    if st.button("Encrypt Message"):
 
-        st.success("New Key Active!")
+        if pass_input and msg:
+
+            key = derive_key(pass_input, st.session_state.salt)
+
+            f = Fernet(key)
+
+            token = f.encrypt(msg.encode())
+
+            st.code(token.decode(), language="text")
+
+        else:
+
+            st.warning("Password and Message required.")
 
 with col2:
 
-    if st.session_state.key:
+    token_in = st.text_area("Token to Decrypt")
 
-        st.download_button(
+    if st.button("Decrypt Message"):
 
-            label="Save Key to PC",
+        if pass_input and token_in:
 
-            data=st.session_state.key,
+            try:
 
-            file_name="master_key.txt",
+                key = derive_key(pass_input, st.session_state.salt)
 
-            mime="text/plain",
+                f = Fernet(key)
 
-            use_container_width=True
+                decoded = f.decrypt(token_in.encode()).decode()
 
-        )
+                st.success(f"Decrypted: {decoded}")
 
-if st.session_state.key:
+            except:
 
-    st.info(f"Current Session Key: `{st.session_state.key.decode()}`")
-
-else:
-
-    st.warning("No Master Key active. Generate one above to begin.")
+                st.error("Decryption failed. Check password/token.")
 
 st.divider()
 
-# --- ENCRYPTION SECTION ---
+# FEATURE: Clear All Button
 
-st.subheader("🛡️ Encrypt Section")
+if st.button("Clear All Data"):
 
-text_to_encrypt = st.text_area("Message to Lock", placeholder="Enter text here...")
+    st.rerun()
 
-if st.button("Generate Secure Token"):
-
-    if not st.session_state.key:
-
-        st.error("Error: You must generate a Master Key first!")
-
-    elif text_to_encrypt:
-
-        try:
-
-            token = encrypt_message(text_to_encrypt, st.session_state.key)
-
-            st.session_state.encrypted_token = token
-
-            st.success("Message Encrypted!")
-
-        except Exception as e:
-
-            st.error(f"Encryption failed: {e}")
-
-    else:
-
-        st.warning("Please enter a message first.")
-
-if st.session_state.encrypted_token:
-
-    st.code(st.session_state.encrypted_token, language="text")
-
-st.divider()
-
-# --- DECRYPTION SECTION ---
-
-st.subheader("🔓 Decrypt Section")
-
-token_to_decrypt = st.text_input("Paste Token Here", placeholder="Paste encrypted token...")
-
-if st.button("Reveal Message"):
-
-    if not st.session_state.key:
-
-        st.error("Error: Master Key missing.")
-
-    elif token_to_decrypt:
-
-        try:
-
-            decrypted = decrypt_message(token_to_decrypt, st.session_state.key)
-
-            st.success(f"**Decrypted Content:** {decrypted}")
-
-        except Exception:
-
-            st.error("Decryption failed. Ensure the Master Key matches the token.")
-
-    else:
-
-        st.warning("Please paste a token first.")
+st.caption("Developed for Cybersecurity Competency Research")
