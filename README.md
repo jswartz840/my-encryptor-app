@@ -12,5 +12,3 @@ st.markdown("""
 2. **Execute Engine:** Click the **'Initialize Scan'** button to start the automated assessment.
 3. **Telemetry Analysis:** Review real-time vulnerability data and logs in the output terminal.
 
-> **Note:** This tool is intended for authorized penetration testing and educational security audits only.
-""")
